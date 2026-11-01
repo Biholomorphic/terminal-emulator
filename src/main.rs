@@ -1,25 +1,13 @@
-use winit::{
-    event::{self, *},
-    event_loop::EventLoopBuilder,
-    keyboard::{KeyCode, PhysicalKey},
-    window::WindowBuilder,
-};
+mod app;
 
-#[derive(Debug, Clone, Copy)]
-
-enum CustomEvent {
-    Timer,
-}
+use app::App;
+use winit::event_loop::EventLoop;
 
 fn main() {
     env_logger::init();
 
-    let event_loop = EventLoopBuilder::<CustomEvent>::with_user_event().build().unwrap();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-    let event_loop_proxy = event_loop.create_proxy();
+    let event_loop = EventLoop::new().unwrap();
+    let mut app = App::new();
 
-    std::thread::spawn(move || loop {
-        std::thread::sleep(std::time::Duration::from_millis(17));
-        event_loop_proxy.send_event(CustomEvent::Timer).ok();
-    });
+    event_loop.run_app(&mut app).unwrap();
 }
