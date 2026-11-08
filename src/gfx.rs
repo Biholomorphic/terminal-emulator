@@ -1,5 +1,3 @@
-#![allow(warnings)]
-
 use anyhow::anyhow;
 use std::sync::Arc;
 //use wgpu::wgc::{device::queue, present::ResolvedSurfaceOutput};
