@@ -7,6 +7,9 @@ use winit::event_loop::{ControlFlow, EventLoop};
 fn main() {
     env_logger::init();
 
+    #[cfg(target_os = "linux")]
+    gtk::init().expect("Failed to initialize GTK");
+
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Wait);
     let mut app = App::default();

@@ -7,12 +7,40 @@ use winit::{
     event_loop::ActiveEventLoop,
     window::{Window, WindowId},
 };
+use wry::dpi::{PhysicalPosition, PhysicalSize};
 
 #[derive(Default)]
 pub struct App {
     window: Option<Arc<Window>>,
     gfx: Option<Gfx>,
     webview: Option<wry::WebView>,
+}
+
+impl App {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn update_layout(&mut self, size: PhysicalSize<u32>) {
+        let x_pos = size.width / 2;
+        let y_pos = 0;
+        let pane_width = size.width - x_pos;
+        let pane_height = size.height;
+
+        let dims = PhysicalSize::new(pane_width, pane_height).into();
+        let pos = PhysicalPosition::new(x_pos, y_pos).into();
+        let bounds = wry::Rect {
+            position: pos,
+            size: dims,
+        };
+
+        if let Some(webview) = &mut self.webview {
+            let _ = webview.set_bounds(bounds);
+        }
+        if let Some(window) = &self.window {
+            window.request_redraw();
+        }
+    }
 }
 
 impl ApplicationHandler for App {
@@ -33,12 +61,19 @@ impl ApplicationHandler for App {
                 size: winit::dpi::LogicalSize::new(400, 600).into(),
             })
             .build_as_child(&window)
-            .expect("Faield to create webview");
+            .expect("Failed to create webview");
+        self.webview = Some(webview);
 
         window.request_redraw();
         self.window = Some(window);
         self.gfx = Some(gfx);
-        self.webview = Some(webview);
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        #[cfg(target_os = "linux")]
+        while gtk::events_pending() {
+            gtk::main_iteration_do(false);
+        }
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -47,6 +82,7 @@ impl ApplicationHandler for App {
                 event_loop.exit();
             }
             WindowEvent::Resized(physical_size) => {
+                self.update_layout(physical_size);
                 if let Some(gfx) = &mut self.gfx {
                     gfx.resize(physical_size);
                 }
